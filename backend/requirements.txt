@@ -1,0 +1,6 @@
+fastapi==0.111.0   # the web framework
+uvicorn[standard]==0.29.0  # the server to runs FastAPI
+pydantic-settings==2.2.1 # Reads .env into Python safely
+python-dotenv==1.0.1  # Loads .env file
+sqlalchemy[asyncio]==2.0.30  # Talks to PostgreSQL (async mode)
+asyncpg==0.29.0 # The actual async PostgreSQL driver

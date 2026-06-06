@@ -1,0 +1,10 @@
+#Secrets - never push there to Github
+.env
+
+# Python generates this automatically - not your code
+__pycache__/
+*.pyc
+
+# Local virtual environment if you ever run without Docker
+venv/
+.venv/

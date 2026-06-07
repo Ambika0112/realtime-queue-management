@@ -6,6 +6,9 @@ from app.models.user import User
 from app.schemas.queue import QueueCreate, QueueUpdate, QueueResponse
 from app.services import queue_service
 from app.core.dependencies import get_current_user
+from app.schemas.queue_entry import QueueEntryResponse
+from app.services import queue_entry_service
+
 
 router = APIRouter(prefix="/queues", tags=["Queues"])
 
@@ -41,4 +44,30 @@ async def delete_queue(
     current_user: User = Depends(get_current_user)
 ):
     await queue_service.delete_existing_queue(db, queue_id, current_user)
+
+
+@router.post("/{queue_id}/join", response_model=QueueEntryResponse, status_code=status.HTTP_201_CREATED)
+async def join_queue(
+    queue_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await queue_entry_service.join_queue(db, queue_id, current_user)
+
+@router.post("/{queue_id}/leave", response_model=QueueEntryResponse)
+async def leave_queue(
+    queue_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await queue_entry_service.leave_queue(db, queue_id, current_user)
+
+
+@router.post("/{queue_id}/advance")
+async def advance_queue(
+    queue_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await queue_entry_service.advance_queue(db, queue_id, current_user)
 

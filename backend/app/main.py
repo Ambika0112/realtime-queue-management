@@ -4,6 +4,8 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.routers.auth import router as auth_router
+from app.routers.queue import router as queue_router
+
 from app.database import Base
 
 @asynccontextmanager
@@ -25,6 +27,8 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(queue_router)
+
 
 # "Hey QueueFlow, are you alive? Is your database alive too?"
 @app.get("/health")

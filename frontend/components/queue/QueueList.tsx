@@ -52,10 +52,10 @@ export function QueueList() {
 
   if (queues.length === 0) {
     return (
-      <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-        <p className="text-gray-500 text-lg">No queues are currently active.</p>
+      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+        <p className="text-gray-500 text-base">No queues are currently active.</p>
         {user?.role === 'admin' && (
-          <Link href="/admin/queues/new" className="inline-block mt-4 text-blue-600 hover:underline">
+          <Link href="/admin/queues/new" className="inline-block mt-3 text-sm text-blue-600 hover:underline">
             Create the first queue
           </Link>
         )}
@@ -78,30 +78,30 @@ export function QueueList() {
         const isActive = activeQueueIds.includes(queue.id);
         
         return (
-        <div key={queue.id} className={`border rounded-2xl p-5 hover:shadow-md transition-shadow flex flex-col justify-between ${
-          isActive ? 'border-green-400 ring-2 ring-green-100' : 'border-gray-100'
+        <div key={queue.id} className={`border rounded-xl p-4 sm:p-5 hover:shadow-md transition-shadow flex flex-col justify-between relative ${
+          isActive ? 'border-green-400 ring-1 ring-green-100' : 'border-gray-100'
         }`}>
           {isActive && (
-            <div className="absolute -top-3 -right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+            <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
               Joined
             </div>
           )}
           
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-3">
             <div>
-              <h3 className="font-bold text-lg text-gray-900 mb-1">{queue.name}</h3>
-              {queue.description && <p className="text-sm text-gray-500 mt-1">{queue.description}</p>}
+              <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-0.5">{queue.name}</h3>
+              {queue.description && <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{queue.description}</p>}
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${
               queue.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
-              {queue.status.toUpperCase()}
+              {queue.status}
             </span>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center mb-6 border border-blue-100">
-            <span className="text-blue-800 font-medium">Currently Serving</span>
-            <span className="text-3xl font-black text-blue-600">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg flex justify-between items-center mb-4 border border-blue-100">
+            <span className="text-blue-800 text-sm font-medium">Currently Serving</span>
+            <span className="text-2xl font-bold text-blue-600">
               {queue.current_token === 0 ? '--' : queue.current_token}
             </span>
           </div>
@@ -110,21 +110,21 @@ export function QueueList() {
           {user?.role === 'admin' || user?.role === 'operator' ? (
             <Link 
               href={`/operator/${queue.id}`}
-              className="block w-full text-center bg-gray-900 text-white font-medium py-2.5 rounded-lg hover:bg-black transition-colors"
+              className="block w-full text-center bg-gray-900 text-white text-sm font-medium py-2 rounded-md hover:bg-black transition-colors"
             >
               Manage Queue
             </Link>
           ) : user ? (
             <Link 
               href={`/queue/${queue.id}`}
-              className="block w-full text-center bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+              className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               Join Queue
             </Link>
           ) : (
             <Link 
               href="/login"
-              className="block w-full text-center border-2 border-gray-200 text-gray-700 font-medium py-2.5 rounded-lg hover:border-gray-300 transition-colors"
+              className="block w-full text-center border border-gray-200 text-gray-700 text-sm font-medium py-2 rounded-md hover:border-gray-300 transition-colors"
             >
               Login to Join
             </Link>

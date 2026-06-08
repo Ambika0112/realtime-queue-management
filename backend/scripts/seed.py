@@ -1,17 +1,17 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
-from app.database import async_session_maker
+from app.database import AsyncSessionLocal
 from app.models.user import User, UserRole
 from app.models.queue import Queue
 from app.models.queue_entry import QueueEntry, EntryStatus
-from app.security import get_password_hash
+from app.core.security import hash_password
 
 async def seed_data():
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         print("Starting database seed...")
         
         # 1. Create Demo Users
-        admin_pass = get_password_hash("password123")
+        admin_pass = hash_password("password123")
         
         admin_user = User(
             phone_number="1111111111",

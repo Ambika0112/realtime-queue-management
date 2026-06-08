@@ -43,29 +43,29 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4">
-      {/* Premium Glass Card (Matches Register Page) */}
-      <div className="max-w-md w-full backdrop-blur-xl bg-white/70 p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
+      {/* Premium Glass Card */}
+      <div className="max-w-sm w-full backdrop-blur-xl bg-white/70 p-6 sm:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
         
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-2">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-1.5">
             Welcome Back
           </h2>
-          <p className="text-gray-500 font-medium">Log in to manage your queue status.</p>
+          <p className="text-gray-500 text-sm font-medium">Log in to manage your queue status.</p>
         </div>
         
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6 text-sm animate-in fade-in slide-in-from-top-2">
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 rounded-md mb-5 text-sm animate-in fade-in slide-in-from-top-2">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Phone Number</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1">Phone Number</label>
             <input
               type="text"
               required
-              className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 text-gray-900 shadow-sm"
+              className="w-full px-3.5 py-2.5 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 text-gray-900 text-sm shadow-sm"
               placeholder="9977948000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -73,11 +73,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Password</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1">Password</label>
             <input
               type="password"
               required
-              className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 text-gray-900 shadow-sm"
+              className="w-full px-3.5 py-2.5 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 text-gray-900 text-sm shadow-sm"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -87,7 +87,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0"
+            className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold py-2.5 rounded-lg shadow-md hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>

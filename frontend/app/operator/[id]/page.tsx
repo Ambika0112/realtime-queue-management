@@ -55,8 +55,12 @@ export default function OperatorDashboard() {
       const data = JSON.parse(event.data);
       if (data.type === 'QUEUE_UPDATE') {
         // Refresh everything to get the latest status
-        apiFetch(`/queues/${queueId}`).then(res => res.ok && res.json().then(setQueue));
-        apiFetch(`/queues/${queueId}/entries`).then(res => res.ok && res.json().then(setEntries));
+        apiFetch(`/queues/${queueId}`).then(res => {
+          if (res.ok) res.json().then(setQueue);
+        });
+        apiFetch(`/queues/${queueId}/entries`).then(res => {
+          if (res.ok) res.json().then(setEntries);
+        });
       }
     };
 

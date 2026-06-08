@@ -20,7 +20,13 @@ target_metadata = Base.metadata
 import os
 from dotenv import load_dotenv
 load_dotenv()  # loads the .env file from the working directory
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+db_url = os.environ.get("DATABASE_URL", "")
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+config.set_main_option("sqlalchemy.url", db_url)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

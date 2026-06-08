@@ -14,24 +14,21 @@ async def seed_data():
         admin_pass = get_password_hash("password123")
         
         admin_user = User(
-            username="admin",
-            email="admin@queueflow.com",
+            phone_number="1111111111",
             full_name="Admin User",
             hashed_password=admin_pass,
             role=UserRole.admin
         )
         
         operator_user = User(
-            username="operator",
-            email="operator@queueflow.com",
+            phone_number="2222222222",
             full_name="Dr. Sarah Jenkins",
             hashed_password=admin_pass,
             role=UserRole.operator
         )
         
         customer_user = User(
-            username="johndoe",
-            email="john@example.com",
+            phone_number="3333333333",
             full_name="John Doe",
             hashed_password=admin_pass,
             role=UserRole.customer

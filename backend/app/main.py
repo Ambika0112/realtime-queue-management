@@ -7,11 +7,19 @@ from app.routers.auth import router as auth_router
 from app.routers.queue import router as queue_router
 
 
+from app.database import engine, Base
+from app.models.user import User
+from app.models.queue import Queue
+from app.models.queue_entry import QueueEntry
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   print(f"starting {settings.APP_NAME}...")
-
-  print("Database managed by Alembic.")
+  
+  async with engine.begin() as conn:
+      await conn.run_sync(Base.metadata.create_all)
+      
+  print("Database tables verified.")
 
   
 

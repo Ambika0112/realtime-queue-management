@@ -12,14 +12,20 @@ from app.models.user import User
 from app.models.queue import Queue
 from app.models.queue_entry import QueueEntry
 
+db_error = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+  global db_error
   print(f"starting {settings.APP_NAME}...")
   
-  async with engine.begin() as conn:
-      await conn.run_sync(Base.metadata.create_all)
-      
-  print("Database tables verified.")
+  try:
+      async with engine.begin() as conn:
+          await conn.run_sync(Base.metadata.create_all)
+      print("Database tables verified.")
+  except Exception as e:
+      print(f"Failed to create tables: {e}")
+      db_error = str(e)
 
   
 
@@ -53,9 +59,9 @@ async def health_check():
   try:
     async with engine.connect() as conn:
       await conn.execute(text("SELECT 1"))
-    db_status = "connected"
+    db_status = "connected" if not db_error else f"tables error: {db_error}"
   except Exception as e:
-    db_status = f"error: {str(e)}"
+    db_status = f"connection error: {str(e)}"
 
   return {
     "status": "ok",

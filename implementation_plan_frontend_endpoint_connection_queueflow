@@ -1,0 +1,34 @@
+# Integrating the Final Backend Endpoints
+
+You are exactly right! We have a powerful backend with lots of features, but our frontend only uses `/auth/login`, `/auth/register`, and `GET /queues`. 
+
+Here is the plan to build the final UI pages to consume the rest of your backend endpoints:
+
+## 1. The Customer View: Joining & Tracking
+#### [NEW] `app/queue/[id]/page.tsx`
+When a customer clicks "Join Queue" from the Home page, they go here.
+- **Endpoints Used:**
+  - `GET /queues/{id}` (to load the queue details)
+  - `POST /queues/{id}/join` (to actually join and get a token)
+  - `POST /queues/{id}/leave` (if they cancel)
+- **Real-Time Magic:** This page will connect to our **WebSocket** (`/queues/{id}/ws`) to listen for live token updates so the customer can watch the line move without refreshing the page!
+
+## 2. The Operator View: Calling the Next Patient
+#### [NEW] `app/operator/[id]/page.tsx`
+When an Admin or Operator clicks "Manage Queue" on the Home page, they go here.
+- **Endpoints Used:**
+  - `GET /queues/{id}` (to see the queue details)
+  - `POST /queues/{id}/advance` (The big "Call Next Patient" button)
+- **What it does:** When they click the button, it updates the database and broadcasts the new number to all the customers' phones via the WebSocket.
+
+## 3. The Admin View: Editing & Deleting
+We will add small edit/delete buttons to the QueueList for admins.
+- **Endpoints Used:**
+  - `PATCH /queues/{id}` (Edit capacity or name)
+  - `DELETE /queues/{id}` (Remove the queue completely)
+
+---
+### Next Step
+We should build the **Customer View (`app/queue/[id]/page.tsx`)** first so that users can actually join the queues you just created.
+
+If you approve this plan, I'll provide the code for the Customer View component!

@@ -8,6 +8,7 @@ from app.services.queue_service import get_queue
 from app.repositories import queue_repo
 from app.models.user import UserRole
 from app.core.websockets import manager
+from datetime import datetime, timezone
 
 
 
@@ -51,7 +52,10 @@ async def leave_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You are not active in this queue")
         
     # Change status to left
-    return await queue_entry_repo.update_entry(db, entry, {"status": EntryStatus.left})
+    return await queue_entry_repo.update_entry(db, entry, {
+        "status": EntryStatus.left,
+        "resolved_at": datetime.now(timezone.utc)
+    })
 
 
 async def advance_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User) -> QueueEntry | dict:
@@ -64,7 +68,10 @@ async def advance_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: Use
     # 1. Complete the currently serving person
     current_serving = await queue_entry_repo.get_currently_serving_entry(db, queue_id)
     if current_serving:
-        await queue_entry_repo.update_entry(db, current_serving, {"status": EntryStatus.completed})
+        await queue_entry_repo.update_entry(db, current_serving, {
+            "status": EntryStatus.completed,
+            "resolved_at": datetime.now(timezone.utc)
+        })
         
     # 2. Find the next person
     next_waiting = await queue_entry_repo.get_next_waiting_entry(db, queue_id)
@@ -73,7 +80,10 @@ async def advance_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: Use
         return {"message": "The queue is empty!"}
         
     # 3. Mark the next person as serving
-    await queue_entry_repo.update_entry(db, next_waiting, {"status": EntryStatus.serving})
+    await queue_entry_repo.update_entry(db, next_waiting, {
+        "status": EntryStatus.serving,
+        "served_at": datetime.now(timezone.utc)
+    })
     
     # 4. Update the Queue's current token so the whole hospital can see it on the screen
     await queue_repo.update_queue(db, queue, {"current_token": next_waiting.token_number})

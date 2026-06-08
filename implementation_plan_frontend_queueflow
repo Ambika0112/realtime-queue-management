@@ -1,0 +1,328 @@
+# QueueFlow Frontend — Architecture Plan
+
+> This is a discussion document. Every section has open questions.
+> We discuss, you decide, then we build.
+
+---
+
+## 1. User Journeys
+
+Before routes, think about journeys. A journey is the sequence of screens a user walks through to complete a goal.
+
+### Customer Journey
+```
+Lands on app
+    ↓
+Sees queue listing (public)
+    ↓
+Wants to join → prompted to login/register
+    ↓
+Logs in → redirected back to queues
+    ↓
+Joins queue → gets token number
+    ↓
+Watches queue status in real time (WebSocket)
+    ↓
+Token called → goes to counter
+    ↓
+Done (entry marked served by operator)
+```
+
+### Operator Journey
+```
+Logs in
+    ↓
+Sees their assigned queues
+    ↓
+Opens a queue → sees waiting list
+    ↓
+Clicks "Call Next" → advances queue
+    ↓
+Current token updates everywhere (WebSocket broadcast)
+    ↓
+Repeat
+```
+
+### Admin Journey
+```
+Logs in
+    ↓
+Dashboard → overview of all queues + stats
+    ↓
+Create new queue
+    ↓
+Manage operators → assign to queues
+    ↓
+Override queue (pause, disable, reset)
+    ↓
+View analytics
+```
+
+---
+
+## 2. Pages and Routes
+
+| Route | Page | Who Can Access | Main Action |
+|---|---|---|---|
+| `/` | Landing / Queue List | Everyone | Browse queues |
+| `/login` | Login | Guest only | Authenticate |
+| `/register` | Register | Guest only | Create account |
+| `/queue/[id]` | Queue Detail | Everyone | Join / view status |
+| `/dashboard` | My Token / Status | Customer | Track their position |
+| `/operator` | Operator Panel | Operator + Admin | Advance queue |
+| `/operator/[id]` | Queue Operations | Operator + Admin | Call next, skip |
+| `/admin` | Admin Dashboard | Admin only | Overview + analytics |
+| `/admin/queues/new` | Create Queue | Admin only | Create |
+| `/admin/queues/[id]` | Manage Queue | Admin only | Edit / delete |
+| `/admin/operators` | Manage Operators | Admin only | Assign roles |
+
+> **Open Question #1:** Should the Customer have a dedicated `/dashboard` page, or should their token status appear directly on the `/queue/[id]` page after joining? What experience do you prefer?
+
+---
+
+## 3. Information Architecture
+
+**What is IA?**
+It's how information is organized and prioritized on each screen. What's the most important thing a user needs to see first?
+
+### Queue Detail Page (most critical screen)
+The customer is anxious. They want to know one thing: *"How long until my turn?"*
+
+Priority order on this page:
+1. Current serving token (HUGE, visible from across the room)
+2. Their token number
+3. How many people are ahead of them
+4. Queue name / department
+5. Actions (Join / Leave)
+
+> **Open Question #2:** Should the "current serving" number be visible to people who haven't joined yet? (Yes, so they can decide if the wait is worth it.) Agree or disagree?
+
+---
+
+## 4. Folder Structure
+
+Next.js 14+ uses the App Router. Here's the proposed structure:
+
+```
+frontend/
+├── app/                        ← Next.js App Router pages
+│   ├── layout.tsx              ← Root layout (fonts, providers)
+│   ├── page.tsx                ← Landing page (queue list)
+│   ├── login/
+│   │   └── page.tsx
+│   ├── register/
+│   │   └── page.tsx
+│   ├── queue/
+│   │   └── [id]/
+│   │       └── page.tsx        ← Queue detail + join
+│   ├── dashboard/
+│   │   └── page.tsx            ← Customer token status
+│   ├── operator/
+│   │   ├── page.tsx            ← Operator queue list
+│   │   └── [id]/
+│   │       └── page.tsx        ← Advance queue UI
+│   └── admin/
+│       ├── page.tsx            ← Admin dashboard
+│       ├── queues/
+│       │   ├── new/page.tsx
+│       │   └── [id]/page.tsx
+│       └── operators/
+│           └── page.tsx
+│
+├── components/                 ← Reusable UI components
+│   ├── ui/                     ← Pure UI (Button, Card, Input)
+│   ├── queue/                  ← Queue-specific components
+│   └── auth/                   ← Auth forms
+│
+├── lib/                        ← Utilities
+│   ├── api.ts                  ← API client (fetch wrapper)
+│   ├── auth.ts                 ← Auth helpers
+│   └── websocket.ts            ← WebSocket manager
+│
+├── hooks/                      ← Custom React hooks
+│   ├── useAuth.ts
+│   ├── useQueue.ts
+│   └── useWebSocket.ts
+│
+├── store/                      ← Global state
+│   └── auth.ts
+│
+└── types/                      ← TypeScript interfaces
+    ├── user.ts
+    ├── queue.ts
+    └── queue-entry.ts
+```
+
+---
+
+## 5. Authentication Strategy — The Most Important Decision
+
+**The problem:** After login, your backend returns a JWT token. Where do you store it in the browser?
+
+### Option A: localStorage
+```
+Pros:  Simple. Survives page refresh. Easy to read.
+Cons:  Vulnerable to XSS (Cross-Site Scripting).
+       Any JavaScript on the page can read it.
+       If your app has a script injection bug, attacker steals token.
+```
+
+### Option B: httpOnly Cookie
+```
+Pros:  JavaScript CANNOT read it (browser enforces this).
+       Immune to XSS attacks.
+       Automatically sent with every request.
+Cons:  Requires backend to set the cookie (CORS config changes needed).
+       More complex to implement.
+       Vulnerable to CSRF (different attack, different defense).
+```
+
+### Option C: In-Memory (React state / Zustand)
+```
+Pros:  Cannot be stolen by XSS. Never touches storage.
+Cons:  Disappears on page refresh. User must log in again.
+       Bad UX for most apps.
+```
+
+> **Open Question #3:** For this project, which storage approach do you think balances security and developer simplicity? There is no universally "correct" answer — it depends on your threat model.
+>
+> Hint: Most production apps use httpOnly cookies. Most tutorial apps use localStorage. We should discuss which to use here and why.
+
+---
+
+## 6. Authorization Strategy — Protecting Routes
+
+**The problem:** A customer should not be able to access `/admin`. How do we enforce this?
+
+### Approach: Middleware-based Route Guards
+
+Next.js has a `middleware.ts` file that runs before every request — on the server, before the page loads. We can:
+
+1. Read the token from cookies
+2. Decode it to get the role
+3. Redirect if unauthorized
+
+```
+User goes to /admin
+     ↓
+middleware.ts runs first (server-side)
+     ↓
+No token? → redirect to /login
+Token exists but role = "customer"? → redirect to /
+Role = "admin"? → allow through
+```
+
+> **Open Question #4:** Why is it important to do this check on the server (middleware) rather than just hiding the link in the UI?
+
+---
+
+## 7. State Management
+
+**What state do we need globally?**
+- Current user (id, role, name) — needed everywhere
+- Auth token — needed for every API call
+
+**What state is local to a page?**
+- Queue list — fetched on the queue listing page
+- Current entry / token — fetched on the queue detail page
+- WebSocket updates — local to the queue page
+
+### Options
+
+**Option A: React Context + useReducer**
+- Built into React, no extra library
+- Good for simple global state (just user + token)
+- Gets messy if state is complex
+
+**Option B: Zustand**
+- Lightweight state library (8kb)
+- Simple, intuitive API
+- Persists to localStorage easily
+- Recommended for most Next.js apps
+
+**Option C: React Query (TanStack Query)**
+- Specifically for server state (API data)
+- Handles loading/error states automatically
+- Caches data, refetches automatically
+- Best paired with Zustand (Zustand for auth, React Query for API data)
+
+> **Open Question #5:** What do you think "global state" means vs "local state"? Give me one example of each from the QueueFlow app.
+
+---
+
+## 8. API Integration
+
+**The problem:** Every API call needs the auth token in the header. You don't want to manually add the header on every single fetch call.
+
+**Solution: A single API client**
+
+Create `lib/api.ts` — a wrapper around `fetch` that:
+1. Automatically adds `Authorization: Bearer <token>`
+2. Handles 401 (token expired) → redirect to login
+3. Handles errors consistently
+
+Every part of the app imports this one client. The token logic lives in one place.
+
+---
+
+## 9. WebSocket Architecture
+
+**The real-time challenge:**
+
+When an operator advances the queue, every customer on the queue page must see the new token number instantly.
+
+```
+Operator clicks "Call Next"
+      ↓
+POST /queues/{id}/advance → Backend
+      ↓
+Backend broadcasts via WebSocket
+      ↓
+All connected clients receive: { current_token: 5 }
+      ↓
+React state updates → UI re-renders → Number changes
+```
+
+**Where does the WebSocket connection live?**
+
+Two options:
+1. **Inside the Queue Detail page component** — connect when the page mounts, disconnect when user leaves.
+2. **In a custom hook `useWebSocket(queueId)`** — reusable, cleaner, testable.
+
+Option 2 is strongly preferred. The component should only care about displaying data, not about managing WebSocket connections.
+
+---
+
+## 10. Component Design Philosophy
+
+Three categories of components:
+
+### UI Components (`components/ui/`)
+No business logic. No API calls. Just visuals.
+- `Button`, `Input`, `Card`, `Badge`, `Spinner`
+- Accept props, render HTML
+
+### Feature Components (`components/queue/`, `components/auth/`)
+Contain business logic for a specific feature.
+- `QueueCard` — displays one queue with join button
+- `TokenDisplay` — shows current/my token, connects to WebSocket
+- `AdvanceQueuePanel` — operator's "Call Next" interface
+
+### Page Components (`app/**/page.tsx`)
+Fetch data, manage page-level state, compose feature components.
+- No raw HTML markup
+- Just assembles components
+
+---
+
+## Open Questions Summary
+
+Before we scaffold anything, I want your answers to these:
+
+1. Should the customer's token status appear on the queue detail page or a separate `/dashboard`?
+2. Should unjoined visitors see the current serving token on the queue page?
+3. Where should we store the JWT — localStorage, httpOnly cookie, or memory?
+4. Why is server-side route protection more important than hiding UI elements?
+5. What's the difference between global state and local state in this app?
+
+Answer these and we will have a complete architecture to build from.

@@ -16,3 +16,16 @@ class QueueEntryResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+class QueueEntryStatusResponse(QueueEntryResponse):
+    people_ahead: int
+
+class UserBasicResponse(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    phone_number: str
+    
+    model_config = {"from_attributes": True}
+
+class QueueEntryWithUserResponse(QueueEntryResponse):
+    user: UserBasicResponse

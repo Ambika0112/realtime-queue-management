@@ -8,3 +8,8 @@ __pycache__/
 # Local virtual environment if you ever run without Docker
 venv/
 .venv/
+
+# Frontend (Next.js) ignores
+node_modules/
+.next/
+frontend/.env.local

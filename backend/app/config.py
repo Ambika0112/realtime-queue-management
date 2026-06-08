@@ -6,6 +6,7 @@ class Settings(BaseSettings):
   SECRET_KEY: str
   DATABASE_URL: str
   REDIS_URL: str
+  FRONTEND_URL: str = "http://localhost:3000"
   
   model_config = SettingsConfigDict(env_file=".env")
 

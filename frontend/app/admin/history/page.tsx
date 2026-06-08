@@ -28,7 +28,11 @@ export default function AdminHistoryPage() {
 
     if (user && user.role === 'admin') {
       // Fetch queues for the filter dropdown
-      apiFetch('/queues/').then(res => res.ok && res.json().then(setQueues));
+      apiFetch('/queues/').then(res => {
+        if (res.ok) {
+          res.json().then(setQueues);
+        }
+      });
       fetchHistory();
     }
   }, [user, isAuthLoading, router]);

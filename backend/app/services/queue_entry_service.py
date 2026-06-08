@@ -25,6 +25,19 @@ async def join_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User) 
     if existing_entry:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You are already in this queue")
         
+    # 3.5 Anti-spam Cooldown: Did the user just leave this queue recently?
+    from datetime import timedelta
+    recent_left = await queue_entry_repo.get_recent_left_entry_for_user(db, queue_id, current_user.id)
+    if recent_left and recent_left.resolved_at:
+        time_since_left = datetime.now(timezone.utc) - recent_left.resolved_at
+        if time_since_left < timedelta(minutes=5):
+            # Calculate remaining minutes (minimum 1 minute to avoid saying "0 minutes")
+            minutes_left = max(1, 5 - int(time_since_left.total_seconds() / 60))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS, 
+                detail=f"You recently left this queue. Please wait {minutes_left} minute(s) before rejoining to prevent spam."
+            )
+        
     # 4. What is the next token number?
     max_token = await queue_entry_repo.get_max_token_for_queue(db, queue_id)
     next_token = max_token + 1

@@ -19,6 +19,19 @@ async def get_active_entry_for_user(db: AsyncSession, queue_id: uuid.UUID, user_
     )
     return result.scalar_one_or_none()
 
+async def get_recent_left_entry_for_user(db: AsyncSession, queue_id: uuid.UUID, user_id: uuid.UUID) -> QueueEntry | None:
+    result = await db.execute(
+        select(QueueEntry)
+        .where(
+            QueueEntry.queue_id == queue_id,
+            QueueEntry.user_id == user_id,
+            QueueEntry.status == EntryStatus.left
+        )
+        .order_by(QueueEntry.resolved_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
 async def get_max_token_for_queue(db: AsyncSession, queue_id: uuid.UUID) -> int:
     result = await db.execute(
         select(func.max(QueueEntry.token_number)).where(QueueEntry.queue_id == queue_id)

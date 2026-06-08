@@ -7,6 +7,8 @@ from app.repositories import queue_entry_repo
 from app.services.queue_service import get_queue
 from app.repositories import queue_repo
 from app.models.user import UserRole
+from app.core.websockets import manager
+
 
 
 async def join_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User) -> QueueEntry:
@@ -75,5 +77,9 @@ async def advance_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: Use
     
     # 4. Update the Queue's current token so the whole hospital can see it on the screen
     await queue_repo.update_queue(db, queue, {"current_token": next_waiting.token_number})
+
+    # 5. Broadcast the new token to all connected clients!
+    await manager.broadcast_to_queue(queue_id, {"current_token": next_waiting.token_number})
+
     
     return next_waiting

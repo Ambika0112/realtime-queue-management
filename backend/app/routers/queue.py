@@ -8,6 +8,9 @@ from app.services import queue_service
 from app.core.dependencies import get_current_user
 from app.schemas.queue_entry import QueueEntryResponse
 from app.services import queue_entry_service
+from fastapi import WebSocket, WebSocketDisconnect
+from app.core.websockets import manager
+
 
 
 router = APIRouter(prefix="/queues", tags=["Queues"])
@@ -71,3 +74,13 @@ async def advance_queue(
 ):
     return await queue_entry_service.advance_queue(db, queue_id, current_user)
 
+
+@router.websocket("/{queue_id}/ws")
+async def websocket_endpoint(websocket: WebSocket, queue_id: uuid.UUID):
+    await manager.connect(websocket, queue_id)
+    try:
+        while True:
+            # Keep the connection alive — just wait for the client to send anything
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, queue_id)

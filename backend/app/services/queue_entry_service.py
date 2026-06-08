@@ -56,8 +56,8 @@ async def leave_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User)
 
 async def advance_queue(db: AsyncSession, queue_id: uuid.UUID, current_user: User) -> QueueEntry | dict:
     # Admin Check
-    if current_user.role != UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can advance the queue")
+    if current_user.role not in [UserRole.admin, UserRole.operator]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins or operators can advance the queue")
         
     queue = await get_queue(db, queue_id)
     

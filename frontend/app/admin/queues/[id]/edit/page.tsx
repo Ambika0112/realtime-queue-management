@@ -16,7 +16,7 @@ export default function EditQueuePage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [maxCapacity, setMaxCapacity] = useState('');
-  const [status, setStatus] = useState<'active' | 'paused' | 'closed'>('active');
+  const [status, setStatus] = useState<Queue['status']>('active');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,7 +153,7 @@ export default function EditQueuePage() {
               >
                 <option value="active">Active (Taking patients)</option>
                 <option value="paused">Paused (No new joins)</option>
-                <option value="closed">Closed</option>
+                <option value="disabled">Disabled (Closed)</option>
               </select>
             </div>
           </div>
